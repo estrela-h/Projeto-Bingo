@@ -1,4 +1,5 @@
 <h1>Bingo Eletrônico</h1>
+<img src=https://img.shields.io/badge/STATUS-EM_DESENVOLVIMENTO-lightgreen  alt=""/>
 <h2>Descrição do Projeto</h2>
 <div>
 Este trabalho tem como intuito desenvolver a estrutura base de um bingo eletrônico
@@ -8,8 +9,8 @@ de Programação de Software Básico.
 <h2>Nome dos Participantes</h2>
 <div>
 »Helena Estrela
-»Felipe Cunha
-»Carlos Eduardo
-»Henrique Lobo
-»Lucas Ariel
+<p>»Felipe Cunha</p>
+<p>»Carlos Eduardo</p>
+<p>»Henrique Lobo</p>
+<p>»Lucas Ariel</p>
 </div>
