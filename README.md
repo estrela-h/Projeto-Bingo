@@ -3,12 +3,12 @@
 <h2>Descrição do Projeto</h2>
 <div>
 Este trabalho tem como intuito desenvolver a estrutura base de um bingo eletrônico
-utilizando o Arduíno digitalmente, e depois implementá-lo de forma física para matéria
+utilizando o Arduíno digitalmente, e depois implementá-lo de forma física para a matéria
 de Programação de Software Básico.
 </div>
 <h2>Nome dos Participantes</h2>
 <div>
-»Helena Estrela
+<p>»Helena Estrela</p>
 <p>»Felipe Cunha</p>
 <p>»Carlos Eduardo</p>
 <p>»Henrique Lobo</p>
