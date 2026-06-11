@@ -1,5 +1,5 @@
 ;==============================================================================
-; BINGO ELETRÔNICO - BUGS CORRIJIDOS E CODIGO MODULARIZADO 
+; BINGO ELETRÔNICO - QUASE FINAL
 ;==============================================================================
 
 ; Estes comandos preparam o terreno. Eles dizem ao programa para ler as 
