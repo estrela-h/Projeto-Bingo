@@ -1,478 +1,161 @@
 ;==============================================================================
-; BINGO ELETRÔNICO - ATmega328P (Assembly AVRA) - VERSÃO CORRIGIDA
-;==============================================================================
-; Lógica de Multiplexação Ativa em HIGH (Compatível com Transistores NPN)
-; Montador: avra
-; Compilação: avra -fI bingo_main.asm
+; BINGO ELETRÔNICO - BUGS CORRIJIDOS E CODIGO MODULARIZADO 
 ;==============================================================================
 
-.include "m328Pdef.inc"
+; Estes comandos preparam o terreno. Eles dizem ao programa para ler as 
+; definições do "cérebro" do nosso projeto, que é o chip ATmega328P.
+.nolist
+.include "m328Pdef.inc" ; Inclui um "dicionário" com os nomes dos pinos e funções do chip
+.list
 
 ;==============================================================================
-; REGISTRADORES
+; --- Mapeamento de Registradores (Os "Post-its" da CPU) ---
+; Aqui damos nomes fáceis de lembrar para os espaços de memória ultrarrápidos.
 ;==============================================================================
-.def TEMP        = r16
-.def TEMP2       = r17
-.def DISP_DEC    = r18
-.def DISP_UNI    = r19
-.def MUX_STATE   = r20
-.def COUNT       = r21
-.def RAND_L      = r22
-.def RAND_H      = r23
-.def FLAGS       = r24
-.def DEBOUNCE_CNT= r25
+.def TEMP         = r16 ; Variável temporária de uso geral (como um rascunho)
+.def TEMP2        = r17 ; Outro rascunho para ajudar em contas rápidas
+.def DISP_DEC     = r18 ; Guarda o desenho do número da DEZENA no display
+.def DISP_UNI     = r19 ; Guarda o desenho do número da UNIDADE no display
+.def MUX_STATE    = r20 ; Controla qual display está aceso (multiplexação)
+.def COUNT        = r21 ; Conta quantos números já foram sorteados no total
+.def RAND_L       = r22 ; Metade do número usado para gerar a aleatoriedade (sorteio)
+.def RAND_H       = r23 ; Outra metade do número para o sorteio
+.def FLAGS        = r24 ; Um "checklist". Cada bit (0 ou 1) avisa se algo aconteceu (ex: botão clicado)
+.def DEBOUNCE_CNT = r25 ; Contador usado para ignorar ruídos físicos do botão
 
-;==============================================================================
-; CONSTANTES
-;==============================================================================
+; Define uma constante (um valor fixo). O Bingo tradicional vai até 75.
 .equ BINGO_MAX   = 75
-.equ DEBOUNCE_MS = 20
-
-.equ SEG_0   = 0b00111111
-.equ SEG_1   = 0b00000110
-.equ SEG_2   = 0b01011011
-.equ SEG_3   = 0b01001111
-.equ SEG_4   = 0b01100110
-.equ SEG_5   = 0b01101101
-.equ SEG_6   = 0b01111101
-.equ SEG_7   = 0b00000111
-.equ SEG_8   = 0b01111111
-.equ SEG_9   = 0b01101111
-.equ SEG_DASH = 0b01000000
-.equ SEG_OFF  = 0b00000000
 
 ;==============================================================================
-; VETORES DE INTERRUPÇÃO (endereços corretos para ATmega328P)
+; --- Memória de Dados (SRAM) ---
+; Este é o "caderno" onde guardamos coisas que mudam durante o jogo e ocupam espaço.
+;==============================================================================
+.dseg
+.org SRAM_START
+numeros_sorteados: .byte BINGO_MAX ; Cria uma lista com 75 espaços. Se sair o 10, marcamos o espaço 10.
+numero_atual:      .byte 1         ; Guarda o número que acabou de ser sorteado
+tick_botao:        .byte 1         ; Variável de tempo para ajudar na leitura do botão
+tick_ms:           .byte 1         ; Conta os milissegundos que passam
+mux_div:           .byte 1         ; Variável para ajudar a piscar os displays na velocidade certa
+
+;==============================================================================
+; --- Memória de Programa (Flash) e Vetores de Interrupção ---
+; Onde o código vive. Os "Vetores de Interrupção" são como alarmes. Se algo 
+; urgente acontece (como apertar um botão), o chip para o que está fazendo e vem pra cá.
 ;==============================================================================
 .cseg
 .org 0x0000
-    rjmp main
-.org 0x0002
-    reti                    ; INT0
-.org 0x0004
-    reti                    ; INT1
-.org 0x0006
-    reti                    ; PCINT0
-.org 0x0008
-    rjmp PCINT1_vect        ; PCINT1 ← CORRIGIDO
-.org 0x000A
-    reti                    ; PCINT2
-.org 0x000C
-    reti                    ; WDT
-.org 0x000E
-    reti                    ; TIMER2_COMPA
-.org 0x0010
-    reti                    ; TIMER2_COMPB
-.org 0x0012
-    reti                    ; TIMER2_OVF
-.org 0x0014
-    reti                    ; TIMER1_CAPT
-.org 0x0016
-    reti                    ; TIMER1_COMPA
-.org 0x0018
-    reti                    ; TIMER1_COMPB
-.org 0x001A
-    reti                    ; TIMER1_OVF
-.org 0x001C
-    rjmp TIMER0_COMPA_vect  ; TIMER0_COMPA ← CORRIGIDO
-.org 0x001E
-    reti                    ; TIMER0_COMPB
-.org 0x0020
-    reti                    ; TIMER0_OVF
-.org 0x0022
-    reti                    ; SPI_STC
-.org 0x0024
-    reti                    ; USART_RX
-.org 0x0026
-    reti                    ; USART_UDRE
-.org 0x0028
-    reti                    ; USART_TX
-.org 0x002A
-    reti                    ; ADC
-.org 0x002C
-    reti                    ; EE_READY
-.org 0x002E
-    reti                    ; ANALOG_COMP
-.org 0x0030
-    reti                    ; TWI
-.org 0x0032
-    reti                    ; SPM_READY
+    rjmp main          ; Quando liga a energia (Reset), pula direto para a rotina "main"
+
+.org PCI1addr      ; 0x0008 - Alarme de Pino (Pin Change Interrupt)
+    rjmp PCINT1_ISR    ; Se alguém apertou o botão, vai para a rotina de interrupção do botão
+
+.org OC0Aaddr      ; 0x001C - Alarme do Cronômetro (Timer)
+    rjmp TIMER0_COMPA_ISR ; O timer apitou? Vai para a rotina que cuida do tempo e dos displays
+
+.org INT_VECTORS_SIZE  ; Marca onde os alarmes acabam e o código seguro começa
 
 ;==============================================================================
-; TABELA DE SEGMENTOS (flash)
+; --- ROTINA PRINCIPAL (Onde o jogo começa de verdade) ---
 ;==============================================================================
-tabela_seg:
-    .db SEG_0, SEG_1, SEG_2, SEG_3, SEG_4
-    .db SEG_5, SEG_6, SEG_7, SEG_8, SEG_9
-
-;==============================================================================
-; DADOS NA RAM
-;==============================================================================
-.dseg
-.org 0x0100               ; início da SRAM interna
-numeros_sorteados: .byte BINGO_MAX
-numero_atual:      .byte 1
-tick_ms:           .byte 1
-tick_botao:        .byte 1
-mux_div:           .byte 1
-
-;==============================================================================
-; CÓDIGO PRINCIPAL
-;==============================================================================
-.cseg
 main:
-    ldi TEMP, high(RAMEND)
-    out SPH, TEMP
-    ldi TEMP, low(RAMEND)
-    out SPL, TEMP
+    ; 1. Configura a Pilha (Stack Pointer)
+    ; A Pilha é como um "marcador de página". Quando o código vai fazer uma 
+    ; tarefa em outro lugar, ele anota aqui onde estava para saber voltar.
+    ldi     TEMP, HIGH(RAMEND) ; Pega a parte alta do endereço final da memória
+    out     SPH, TEMP          ; Salva no Stack Pointer Alto
+    ldi     TEMP, LOW(RAMEND)  ; Pega a parte baixa
+    out     SPL, TEMP          ; Salva no Stack Pointer Baixo
 
-    ldi FLAGS, (1<<2)
-    clr COUNT
-    clr MUX_STATE
-    clr DEBOUNCE_CNT
+    ; 2. Prepara as variáveis e botões para o estado inicial
+    ldi     FLAGS, (1<<2)      ; Inicia o "checklist" ligando um bit padrão de configuração
+    clr     COUNT              ; Zera o contador de números sorteados (ninguém foi sorteado ainda)
+    clr     MUX_STATE          ; Zera o controlador do display
+    clr     DEBOUNCE_CNT       ; Zera o contador de ruído do botão
 
-    ldi RAND_L, 0x4F
-    ldi RAND_H, 0xC2
+    ; 3. Prepara a "semente" para gerar números aleatórios
+    ldi     RAND_L, 0x4F       ; Coloca um valor maluco qualquer
+    ldi     RAND_H, 0xC2       ; Coloca outro valor maluco. Isso garante que o sorteio não seja viciado.
 
-    rcall init_sram
-    rcall init_portas
-    rcall init_timer0
-    rcall init_pcint
+    ; 4. Liga as outras partes da máquina (configurações que estão nos outros arquivos .inc)
+    rcall   init_sram          ; Limpa a memória SRAM
+    rcall   init_portas        ; Define quem é entrada (botão) e quem é saída (Leds, Display)
+    rcall   init_timer0        ; Liga o cronômetro que vai ficar atualizando os displays
+    rcall   init_pcint         ; Avisa o chip para prestar atenção no botão do bingo
 
-    ldi DISP_DEC, SEG_DASH
-    ldi DISP_UNI, SEG_DASH
+    ; 5. Desenha um traço "-" nos displays de Dezena e Unidade (0b01000000 acende só o segmento do meio)
+    ldi     DISP_DEC, 0b01000000 
+    ldi     DISP_UNI, 0b01000000 
 
-    sei
-
-loop_principal:
-    sbrc FLAGS, 1
-    rjmp handler_bingo_completo
-    sbrs FLAGS, 0
-    rjmp loop_principal
-
-    lds TEMP, tick_ms
-    lds TEMP2, tick_botao
-    sub TEMP, TEMP2
-    cpi TEMP, DEBOUNCE_MS
-    brlo loop_principal
-
-    in TEMP, PINC
-    sbrc TEMP, 0
-    rjmp sorteio_cancelado
-
-    rcall realizar_sorteio
-    rjmp loop_principal
-
-sorteio_cancelado:
-    cbr FLAGS, (1<<0)
-    rjmp loop_principal
-
-handler_bingo_completo:
-    sbi PORTB, 2
-    rcall delay_longo
-    cbi PORTB, 2
-    rcall delay_longo
-    rjmp handler_bingo_completo
+    sei                        ; Autoriza todos os "alarmes" a tocarem (Habilita interrupções globais)
 
 ;==============================================================================
-; SORTEIO
+; --- LOOP PRINCIPAL (O jogo fica girando aqui infinitamente) ---
+;==============================================================================
+loop_principal:
+    sbrc    FLAGS, 1                 ; O jogo acabou? (Pula a próxima linha se o bit 1 das FLAGS for 0)
+    rjmp    handler_bingo_completo   ; Se for 1, vai para a festa de encerramento do bingo!
+    
+    sbrs    FLAGS, 0                 ; Alguém apertou o botão? (Pula a próxima linha se o bit 0 for 1)
+    rjmp    loop_principal           ; Se for 0, ninguém apertou. Volta para o início do loop_principal e fica rodando.
+
+    ; ====================================================================
+    ; Se chegou aqui, é porque alguém apertou o botão! Mas precisamos 
+    ; ter certeza de que não foi só um ruído elétrico ("debounce").
+    ; ====================================================================
+    cbr     FLAGS, (1<<0)            ; Limpa a marcação de que o botão foi clicado (já estamos cuidando disso)
+    rcall   debounce_adaptativo      ; Pede para a rotina confirmar se foi um clique de verdade ou só ruído
+    brcc    loop_principal           ; Se for mentira/ruído (Carry=0), ignora tudo e volta a rodar o loop!
+    ; ====================================================================
+
+    ; Se foi um clique verdadeiro, bora sortear um número!
+    rcall   realizar_sorteio         ; Chama a rotina que sorteia o número
+    rjmp    loop_principal           ; Depois do sorteio, volta para o começo para esperar o próximo clique
+
+;==============================================================================
+; --- FIM DE JOGO (Todos os 75 números saíram) ---
+;==============================================================================
+handler_bingo_completo:
+    sbi     PORTB, 2                 ; Liga um LED ou Buzzer no Pino 2 da Porta B
+    rcall   delay_longo              ; Espera um tempão (pisca devagar)
+    cbi     PORTB, 2                 ; Desliga o LED/Buzzer
+    rcall   delay_longo              ; Espera mais um pouco
+    rjmp    handler_bingo_completo   ; Fica preso aqui pra sempre piscando, indicando que o bingo acabou!
+
+;==============================================================================
+; --- ROTINA QUE SORTEIA OS NÚMEROS ---
 ;==============================================================================
 realizar_sorteio:
-    cbr FLAGS, (1<<0)
-    cbr FLAGS, (1<<2)
-    sbi PORTB, 3
-
-    cpi COUNT, BINGO_MAX
-    brsh sorteio_esgotado
-
-busca_numero:
-    rcall lfsr_step
-    mov TEMP, RAND_L
-    rcall mod75
-    inc TEMP
-
-    ldi ZL, low(numeros_sorteados)
-    ldi ZH, high(numeros_sorteados)
-    mov TEMP2, TEMP
-    dec TEMP2
-    clr r26
-    add ZL, TEMP2
-    adc ZH, r26
-    ld r26, Z
-    tst r26
-    brne busca_numero
-
-    ldi r26, 1
-    st Z, r26
-    inc COUNT
-    sts numero_atual, TEMP
-    rcall atualiza_display
-
-    cpi COUNT, BINGO_MAX
-    brlo sorteio_ok
-    sbr FLAGS, (1<<1)
+    cbr     FLAGS, (1<<0)            ; Garante que não tem nenhum clique pendente gravado
+    cbr     FLAGS, (1<<2)            ; Limpa a flag de configuração inicial (o jogo já começou)
+    sbi     PORTB, 3                 ; Liga um LED (ou som rápido) no pino 3 para dar emoção ao clique!
+    
+    cpi     COUNT, BINGO_MAX         ; Compara: O total de sorteados já atingiu 75?
+    brsh    sorteio_esgotado         ; Se sim (maior ou igual), pula lá pro final (sorteio esgotado)
+    
+    rcall   busca_numero             ; Vai em outro arquivo buscar um número aleatório inédito
+    rcall   atualiza_display         ; Pega esse número e desenha nos displays de 7 segmentos
+    
+    cpi     COUNT, BINGO_MAX         ; Compara de novo: Chegou em 75 números com esse último sorteio?
+    brlo    sorteio_ok               ; Se for menor que 75, tudo ok, pula pro final da rotina
+    sbr     FLAGS, (1<<1)            ; Se chegou em 75, anota na FLAGS (Bit 1) que o Bingo está completo!
 
 sorteio_ok:
-    rcall delay_visual
-    cbi PORTB, 3
-    ret
+    rcall   delay_visual             ; Dá um tempinho só para o LED/som do sorteio aparecer
+    cbi     PORTB, 3                 ; Desliga o LED/som que ligamos lá no começo desta rotina
+    ret                              ; Retorna para onde fomos chamados (lá no loop principal)
 
 sorteio_esgotado:
-    sbr FLAGS, (1<<1)
-    rcall delay_visual
-    cbi PORTB, 3
-    ret
+    sbr     FLAGS, (1<<1)            ; Anota na FLAGS (Bit 1) que o Bingo está completo
+    rcall   delay_visual             ; Espera um tempinho
+    cbi     PORTB, 3                 ; Desliga o LED
+    ret                              ; Retorna
 
 ;==============================================================================
-; ATUALIZA DISPLAY
+; --- INCLUSÃO DOS OUTROS ARQUIVOS (Módulos do Sistema) ---
+; Em vez de fazer um código gigantesco, dividimos as tarefas em outros arquivos.
 ;==============================================================================
-atualiza_display:
-    push r27
-    in r27, SREG
-    push r27
-    cli
-
-    lds r27, numero_atual
-    clr DISP_DEC
-
-separa_dezena:
-    cpi r27, 10
-    brlo separa_fim
-    subi r27, 10
-    inc DISP_DEC
-    rjmp separa_dezena
-
-separa_fim:
-    ldi ZL, low(tabela_seg)
-    ldi ZH, high(tabela_seg)
-    add ZL, r27
-    clr r26
-    adc ZH, r26
-    lpm DISP_UNI, Z
-
-    ldi ZL, low(tabela_seg)
-    ldi ZH, high(tabela_seg)
-    add ZL, DISP_DEC
-    clr r26
-    adc ZH, r26
-    lpm DISP_DEC, Z
-
-    lds r27, numero_atual
-    cpi r27, 10
-    brsh display_ok
-    ldi DISP_DEC, SEG_OFF
-
-display_ok:
-    pop r27
-    out SREG, r27
-    pop r27
-    ret
-
-;==============================================================================
-; MÓDULO 75
-;==============================================================================
-mod75:
-    cpi TEMP, 75
-    brlo mod75_ret
-    subi TEMP, 75
-    rjmp mod75
-mod75_ret:
-    ret
-
-;==============================================================================
-; LFSR 16 BITS
-;==============================================================================
-lfsr_step:
-    mov TEMP, RAND_L
-    andi TEMP, 0x01
-    lsr RAND_H
-    ror RAND_L
-    tst TEMP
-    breq lfsr_ret
-    ldi TEMP, 0xB4
-    eor RAND_H, TEMP
-lfsr_ret:
-    ret
-
-;==============================================================================
-; INICIALIZA RAM
-;==============================================================================
-init_sram:
-    ldi ZL, low(numeros_sorteados)
-    ldi ZH, high(numeros_sorteados)
-    ldi TEMP, BINGO_MAX
-    clr TEMP2
-init_sram_loop:
-    st Z+, TEMP2
-    dec TEMP
-    brne init_sram_loop
-    sts numero_atual, TEMP2
-    sts tick_ms, TEMP2
-    sts tick_botao, TEMP2
-    sts mux_div, TEMP2
-    ret
-
-;==============================================================================
-; INICIALIZA PORTAS
-;==============================================================================
-init_portas:
-    ldi TEMP, 0xFF
-    out DDRD, TEMP
-    clr TEMP
-    out PORTD, TEMP
-
-    ldi TEMP, 0b00001111
-    out DDRB, TEMP
-    clr TEMP
-    out PORTB, TEMP
-
-    clr TEMP
-    out DDRC, TEMP
-    ldi TEMP, 0b00000001
-    out PORTC, TEMP
-    ret
-
-;==============================================================================
-; INICIALIZA TIMER0 (CTC, 1 kHz)
-;==============================================================================
-init_timer0:
-    ldi TEMP, (1<<WGM01)
-    out TCCR0A, TEMP
-    ldi TEMP, (1<<CS01) | (1<<CS00)   ; prescaler 64
-    out TCCR0B, TEMP
-    ldi TEMP, 249
-    out OCR0A, TEMP
-    ldi TEMP, (1<<OCIE0A)
-    sts TIMSK0, TEMP
-    ret
-
-;==============================================================================
-; INICIALIZA PCINT1 (botão no PC0)
-;==============================================================================
-init_pcint:
-    lds TEMP, PCICR
-    ori TEMP, (1<<PCIE1)
-    sts PCICR, TEMP
-    ldi TEMP, (1<<PCINT8)      ; PCINT8 = PC0
-    sts PCMSK1, TEMP
-    ret
-
-;==============================================================================
-; ISR DO TIMER0 (MULTIPLEXAÇÃO)
-;==============================================================================
-TIMER0_COMPA_vect:
-    push TEMP
-    in TEMP, SREG
-    push TEMP
-    push TEMP2
-
-    lds TEMP, tick_ms
-    inc TEMP
-    sts tick_ms, TEMP
-
-    inc RAND_L
-    brne isr_mux_check
-    ldi RAND_L, 0x01
-
-isr_mux_check:
-    lds TEMP, mux_div
-    inc TEMP
-    cpi TEMP, 8
-    brlo isr_mux_skip
-    clr TEMP
-    sts mux_div, TEMP
-    rjmp isr_mux_do
-
-isr_mux_skip:
-    sts mux_div, TEMP
-    rjmp isr_mux_fim
-
-isr_mux_do:
-    in TEMP2, PORTB
-    andi TEMP2, ~((1<<0) | (1<<1))
-    out PORTB, TEMP2
-    clr TEMP2
-    out PORTD, TEMP2
-
-    tst MUX_STATE
-    brne isr_mux_unidade
-
-isr_mux_dezena:
-    out PORTD, DISP_DEC
-    in TEMP2, PORTB
-    ori TEMP2, (1<<0)
-    andi TEMP2, ~(1<<1)
-    out PORTB, TEMP2
-    ldi MUX_STATE, 1
-    rjmp isr_mux_fim
-
-isr_mux_unidade:
-    out PORTD, DISP_UNI
-    in TEMP2, PORTB
-    ori TEMP2, (1<<1)
-    andi TEMP2, ~(1<<0)
-    out PORTB, TEMP2
-    clr MUX_STATE
-
-isr_mux_fim:
-    pop TEMP2
-    pop TEMP
-    out SREG, TEMP
-    pop TEMP
-    reti
-
-;==============================================================================
-; ISR DO PCINT1 (BOTÃO)
-;==============================================================================
-PCINT1_vect:
-    push TEMP
-    in TEMP, SREG
-    push TEMP
-    lds TEMP, tick_ms
-    sts tick_botao, TEMP
-    sbr FLAGS, (1<<0)
-    pop TEMP
-    out SREG, TEMP
-    pop TEMP
-    reti
-
-;==============================================================================
-; DELAYS
-;==============================================================================
-delay_longo:
-    push r26
-    push r27
-    push r28
-    ldi r26, 200
-dly_out:
-    ldi r27, 200
-dly_mid:
-    ldi r28, 130
-dly_in:
-    nop
-    dec r28
-    brne dly_in
-    dec r27
-    brne dly_mid
-    dec r26
-    brne dly_out
-    pop r28
-    pop r27
-    pop r26
-    ret
-
-delay_visual:
-    push r26
-    push r27
-    ldi r26, 80
-dly_v1:
-    ldi r27, 250
-dly_v2:
-    nop
-    dec r27
-    brne dly_v2
-    dec r26
-    brne dly_v1
-    pop r27
-    pop r26
-    ret
+.include "hardware.inc" ; Arquivo que cuida dos botões, pinos e temporizadores
+.include "sorteio.inc"  ; Arquivo focado em gerar números aleatórios e checar se já saíram
+.include "display.inc"  ; Arquivo focado em acender as luzes certas para formar os números
+.include "delays.inc"   ; Arquivo focado em fazer o processador "perder tempo" quando precisa (pausas)
