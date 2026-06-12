@@ -1,7 +1,9 @@
 <h2>Lógica do Projeto</h2>
 <div>
 O projeto está dividido em módulos, cada um com uma função específica, e o circuito digital do projeto
-físico.
+físico e organizados na pasta 
+<a href="https://github.com/estrela-h/Projeto-Bingo/tree/main/src">src</a>.
+</div>
 
 <h3>Módulos</h3>
 <div>
@@ -48,10 +50,9 @@ sequência.
 Este é o dicionário do sistema, onde contém a definição dos pinos, dos registradores
 e da memória SRAM.
 </p>
-</div>
 
 <p>
-    <a href="docs/MATERIAIS.md">
+    <a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/MATERIAIS.md">
         <img src="/assets/Seguir.jpeg" height="34" width="34"/>
     </a>
 </p>
