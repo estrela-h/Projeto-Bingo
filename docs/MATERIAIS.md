@@ -2,7 +2,7 @@
 
 <h3>Circuito Digital</h3>
 <div>
-<img height="120" src="assets/Imagem_do_circuito.png" width="200" alt=""/><br>
+<img height="120" src="assets/Circuito_digital.png" width="200" alt="Imagem do circuito no SimulIDE"/><br>
 Imagem do circuito digital.
 </div>
 
