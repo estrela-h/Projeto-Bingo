@@ -14,5 +14,7 @@ Imagem do circuito digital.
 >>2 Transistores<br>
 >>2 Botões<br>
 >>2 LEDs (vermelho e verde)<br>
+>> 2 Resistencias 1000 Ω<br>
+>> 9 Resistencias 330 Ω<br>  
 >>Jumpers<br>
 </div>
