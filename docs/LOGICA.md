@@ -1,8 +1,9 @@
 <h2>Lógica do Projeto</h2>
 <div>
-O projeto está dividido em módulos, cada um com uma função específica, e o circuito digital do projeto
-físico e organizados na pasta 
-<a href="https://github.com/estrela-h/Projeto-Bingo/tree/main/src">src</a>.
+O projeto está dividido em módulos, cada um com uma função específica, em Assembly e o circuito digital 
+do projeto físico organizados na pasta 
+<a href="https://github.com/estrela-h/Projeto-Bingo/tree/main/src">src</a> e 
+<a href="https://github.com/estrela-h/Projeto-Bingo/tree/main/circuitos">circuitos</a>.
 </div>
 
 <h3>Módulos</h3>

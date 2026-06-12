@@ -30,9 +30,9 @@ os dados da partida vigente. Desta forma, quando o botão for clicado novamente,
 de onde parou.
 </div>
 
-Atribuição pelo uso do ícone<br>
+Atribuição pelo uso dos ícones<br>
 <a href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Pixel perfect - Flaticon</a><br>
-<a href="https://www.flaticon.com/free-icons/home-button" title="home button icons">Home button icons created by hqrloveq - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/home-button" title="home button icons">Home button icons created by hqrloveq - Flaticon</a><br>
 
 <p>
     <a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/LOGICA.md">
