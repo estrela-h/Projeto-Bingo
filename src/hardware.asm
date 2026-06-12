@@ -1,22 +1,23 @@
 ;==============================================================================
-; MÓDULO: hardware.inc
+; MÓDULO: hardware.asm
 ; Responsabilidade: Configurar os pinos físicos do chip, preparar os cronômetros
 ;                   (Timers) e dizer o que fazer quando um alarme (Interrupção) tocar.
 ;==============================================================================
 
 ; ====================================================================
-; 1. LIMPANDO O CADERNO (Memória SRAM)
+; 1. LIMPANDO O DADOS DA RODADA ANTERIOR (Memória SRAM)
 ; Antes de começar o jogo, precisamos apagar todos os números que 
 ; possam ter ficado gravados de um jogo anterior (ou lixo de memória).
 ; ====================================================================
 init_sram:
-    ldi     ZL, LOW(numeros_sorteados)  ; Aponta o "dedo" (Z) para o começo da lista do Bingo
+    ldi     ZL, LOW(numeros_sorteados)  ; Aponta para o começo da lista do bingo
     ldi     ZH, HIGH(numeros_sorteados)
     ldi     TEMP, BINGO_MAX             ; Coloca 75 no contador
-    clr     TEMP2                       ; O rascunho TEMP2 vira o número zero (0)
+    clr     TEMP2                       ; TEMP2 vira o número zero
 
 init_sram_loop:
-    st      Z+, TEMP2       ; "Store and Post-Increment": Escreve Zero na posição e desce o dedo pra próxima linha
+    st      Z+, TEMP2       ; Escreve zero na posição indicada por Z e segue para
+    ; a próxima
     dec     TEMP            ; Diminui 1 do contador
     brne    init_sram_loop  ; Se ainda não apagou as 75 linhas, volta e repete
 
@@ -25,34 +26,32 @@ init_sram_loop:
     sts     tick_ms, TEMP2
     sts     tick_botao, TEMP2
     sts     mux_div, TEMP2
-    ret                     ; Tudo limpo! Retorna.
+    ret                     ; Tudo limpo. Retorna
 
 ; ====================================================================
-; 2. CONFIGURANDO AS PORTAS (Quem é entrada, quem é saída)
-; O chip precisa saber se um pino vai mandar energia (ex: acender LED) 
-; ou se vai receber energia (ex: ler um botão).
+; 2. CONFIGURANDO AS PORTAS
 ; ====================================================================
 init_portas:
     ; Configura a Porta D inteira como SAÍDA (Para os 8 segmentos do Display)
-    ldi     TEMP, 0xFF      ; 0xFF é 11111111 em binário (1 = Saída)
-    out     DDRD, TEMP      ; DDR (Data Direction Register) define a direção
+    ldi     TEMP, 0xFF      ; 1 = Saída
+    out     DDRD, TEMP      ; Define a direção
     clr     TEMP            
-    out     PORTD, TEMP     ; Garante que comecem apagados (0V)
+    out     PORTD, TEMP     ; Garante que comecem apagados
 
     ; Configura metade da Porta B como SAÍDA (Para ligar os Displays e o LED/Buzzer)
-    ldi     TEMP, 0b00001111 ; Os 4 primeiros pinos (da direita) são saídas (1)
+    ldi     TEMP, 0b00001111 ; Os 4 primeiros pinos (da direita) são saídas
     out     DDRB, TEMP
     clr     TEMP
     out     PORTB, TEMP     ; Começam desligados
 
-    ; Configura a Porta C como ENTRADA (Para ler o Botão do Bingo)
+    ; Configura a Porta C como ENTRADA (Para ler o botão do Bingo)
     ldi     TEMP, 0b00000000 ; 0 = Entrada
     out     DDRC, TEMP
     
-    ; ATENÇÃO AO TRUQUE: Mandar "1" para uma porta configurada como entrada 
-    ; liga um "resistor de pull-up" interno. Isso mantém o pino sempre 
-    ; com energia (1), até que você aperte o botão, ligando no Terra e caindo para (0).
-    ldi     TEMP, 0b00000001
+    ; LIGANDO O PULL-UP INTERNO:
+    ; Como removemos os resistores externos, mandamos 1 para os pinos 
+    ; C0 (A0) e C1 (A1) para ativar os resistores internos do chip.
+    ldi     TEMP, 0b00000011 ; Ativa o Pull-Up nos pinos 0 e 1 (A0 e A1)
     out     PORTC, TEMP     
     ret
 
@@ -67,11 +66,11 @@ init_timer0:
     ldi     TEMP, (1<<CS01)|(1<<CS00)   ; Prescaler 64: Deixa o relógio 64 vezes mais lento para conseguirmos contar
     out     TCCR0B, TEMP
     
-    ldi     TEMP, 249                   ; O limite da contagem. Quando chegar no 249, dá exatamente 1 milissegundo!
+    ldi     TEMP, 249                   ; O limite da contagem. Quando chegar no 249, dá exatamente 1 milissegundo
     out     OCR0A, TEMP
     
     lds     TEMP, TIMSK0                
-    ori     TEMP, (1<<OCIE0A)           ; Liga o "alarme sonoro". Quando bater 249, ele avisa o chip (Interrupção).
+    ori     TEMP, (1<<OCIE0A)           ; Liga o alarme. Quando bater 249, ele avisa o chip (Interrupção).
     sts     TIMSK0, TEMP
     ret
 
@@ -83,7 +82,7 @@ init_pcint:
     ori     TEMP, (1<<PCIE1)    ; Habilita o grupo de alarmes da Porta C
     sts     PCICR, TEMP
     
-    ldi     TEMP, (1<<PCINT8)   ; Especifica que o alarme deve tocar só quando o pino PC0 (Botão) mudar de estado
+    ldi     TEMP, (1<<PCINT8) | (1<<PCINT9)   ; Ouve o botão do Sorteio (A0) e o de Ligar/Desligar (A1)
     sts     PCMSK1, TEMP
     ret
 
@@ -92,7 +91,7 @@ init_pcint:
 ; Isso acontece em segundo plano, independente do que o programa principal estiver fazendo.
 ; ====================================================================
 TIMER0_COMPA_ISR:
-    ; --- Salva o estado atual (Guardando as coisas no bolso) ---
+    ; --- Salva o estado atual ---
     push    TEMP
     in      TEMP, SREG
     push    TEMP
@@ -103,10 +102,10 @@ TIMER0_COMPA_ISR:
     inc     TEMP            ; Adiciona +1
     sts     tick_ms, TEMP   ; Salva de volta
 
-    ; --- A "Roleta" do Sorteio ---
+    ; --- A Roleta do Sorteio ---
     ; Como essa rotina roda 1000 vezes por segundo, vamos usar isso para gerar aleatoriedade.
-    ; Incrementamos um número loucamente rápido. O valor que estiver aqui na exata
-    ; fração de segundo que o humano apertar o botão, será a nossa "semente" da sorte!
+    ; Incrementamos um número. O valor que estiver aqui na exata fração de segundo
+    ; que o usuário apertar o botão, será utilizado para o cálculo do número sorteado
     inc     RAND_L          ; Aumenta a variável de aleatoriedade
     brne    isr_mux_check   ; Se não zerou, continua
     ldi     RAND_L, 0x01    ; Se zerou, volta pra 1 (evita zero absoluto no sorteio)
@@ -115,19 +114,19 @@ TIMER0_COMPA_ISR:
 isr_mux_check:
     lds     TEMP, mux_div   ; Pega um contador auxiliar
     inc     TEMP
-    cpi     TEMP, 8         ; Já passaram 8 milissegundos?
+    cpi     TEMP, 2         ; Já passaram 2 milissegundos?
     brlo    isr_mux_skip    ; Se não, pula e não atualiza o display agora. (Isso evita que o brilho fique tremendo)
     
-    clr     TEMP            ; Se deu 8ms, zera a contagem e vai atualizar o display
+    clr     TEMP            ; Se deu 2ms, zera a contagem e vai atualizar o display
     sts     mux_div, TEMP
     rjmp    isr_mux_do
 
 isr_mux_skip:
-    sts     mux_div, TEMP   ; Salva a contagem e vai embora
+    sts     mux_div, TEMP   ; Salva a contagem e retorna
     rjmp    isr_mux_fim
 
 isr_mux_do:
-    ; 1. Primeiro, desliga a energia dos dois displays para não "sujar" a imagem
+    ; 1. Primeiro, desliga a energia dos dois displays
     in      TEMP2, PORTB
     andi    TEMP2, ~((1<<0) | (1<<1)) ; Zera os pinos 0 e 1 da porta B (Corta a energia)
     out     PORTB, TEMP2
@@ -142,29 +141,29 @@ isr_mux_do:
 isr_mux_dezena:
     out     PORTD, DISP_DEC ; Manda o desenho da DEZENA para os pinos
     in      TEMP2, PORTB
-    ori     TEMP2, (1<<0)   ; Liga a energia SÓ do display da dezena
+    ori     TEMP2, (1<<0)   ; Liga a energia só do display da dezena
     andi    TEMP2, ~(1<<1)  ; Garante que a unidade fique desligada
     out     PORTB, TEMP2
     
-    ldi     MUX_STATE, 1    ; Muda a chave. Na próxima vez, será a unidade!
+    ldi     MUX_STATE, 1    ; Muda a chave. Na próxima vez, será a unidade
     rjmp    isr_mux_fim
 
 isr_mux_unidade:
     out     PORTD, DISP_UNI ; Manda o desenho da UNIDADE para os pinos
     in      TEMP2, PORTB
-    ori     TEMP2, (1<<1)   ; Liga a energia SÓ do display da unidade
+    ori     TEMP2, (1<<1)   ; Liga a energia só do display da unidade
     andi    TEMP2, ~(1<<0)  ; Garante que a dezena fique desligada
     out     PORTB, TEMP2
     
-    clr     MUX_STATE       ; Muda a chave para 0. Na próxima vez, será a dezena!
+    clr     MUX_STATE       ; Muda a chave para 0. Na próxima vez, será a dezena
 
 isr_mux_fim:
-    ; --- Devolve tudo que estava no bolso ---
+    ; --- Desempilha o estado do chip ---
     pop     TEMP2
     pop     TEMP
     out     SREG, TEMP
     pop     TEMP
-    reti                    ; "Return from Interrupt": Acabou o alarme, volta pra onde estava!
+    reti                    ; Acabou o alarme e retorna
 
 ; ====================================================================
 ; 6. A ROTINA DA CAMPAINHA (Alguém apertou o botão físico)
