@@ -12,14 +12,14 @@
 init_sram:
     ldi     ZL, LOW(numeros_sorteados)  ; Aponta para o começo da lista do bingo
     ldi     ZH, HIGH(numeros_sorteados)
-    ldi     TEMP, BINGO_MAX             ; Coloca 75 no contador
+    ldi     TEMP, BINGO_MAX             ; Coloca o valor de BINGO_MAX no contador
     clr     TEMP2                       ; TEMP2 vira o número zero
 
 init_sram_loop:
     st      Z+, TEMP2       ; Escreve zero na posição indicada por Z e segue para
     ; a próxima
     dec     TEMP            ; Diminui 1 do contador
-    brne    init_sram_loop  ; Se ainda não apagou as 75 linhas, volta e repete
+    brne    init_sram_loop  ; Se ainda não apagou o total de BINGO_MAX linhas, volta e repete
 
     ; Agora que a lista principal está limpa, zera também as variáveis soltas
     sts     numero_atual, TEMP2
