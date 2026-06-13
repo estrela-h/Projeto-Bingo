@@ -15,6 +15,7 @@ de Programação de Software Básico.
 »Carlos Eduardo<br>
 »Henrique Lôbo<br>
 »Lucas Ariel
+</div>
 
 <h2>Guia de Utilização</h2>
 <div>
@@ -28,11 +29,12 @@ será resetado e voltará ao seu estado inicial, mostrando "--".<br>
 <strong>2°</strong> Se durante uma partida, o usuário clicar no botão x, o circuito será desligado, mas antes salvará
 os dados da partida vigente. Desta forma, quando o botão for clicado novamente, o jogo pode continuar
 de onde parou.
-</div>
 
+<p>
 Atribuição pelo uso dos ícones<br>
 <a href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Pixel perfect - Flaticon</a><br>
-<a href="https://www.flaticon.com/free-icons/home-button" title="home button icons">Home button icons created by hqrloveq - Flaticon</a><br>
+<a href="https://www.flaticon.com/free-icons/home-button" title="home button icons">Home button icons created by hqrloveq - Flaticon</a>
+</p>
 
 <p>
     <a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/LOGICA.md">

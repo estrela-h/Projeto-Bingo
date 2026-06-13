@@ -2,13 +2,13 @@
 
 <h3>Circuito Digital</h3>
 <div>
-<img height="220" src="assets/Circuito_digital.png" width="400" alt=""/><br>
+<img height="220" src="/assets/Circuito_digital.png" width="400" alt=""/><br>
 Imagem do circuito digital no SimulIDE.
 </div>
 
 <h3>Circuito Físico</h3>
 <div>
-<img height="180" src="assets/Circuito_físico1.jpeg" width="360" alt=""/><br>
+<img height="180" src="/assets/Circuito_físico1.jpeg" width="360" alt=""/><br>
 Imagem 1 do circuito físico.
 </div>
 
@@ -26,7 +26,7 @@ Imagem 1 do circuito físico.
 
 <p>
     <a href="https://github.com/estrela-h/Projeto-Bingo/tree/documentacao">
-        <img src="assets/home-button.png" height="34" width="34"/>
+        <img src="/assets/home-button.png" height="34" width="34"/>
     </a>
 </p>
 </div>
