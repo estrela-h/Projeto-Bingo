@@ -19,14 +19,25 @@ de Programação de Software Básico.
 
 <h2>Guia de Utilização</h2>
 <div>
-<strong>1°</strong> Para ativar/desativar o circuito clique no botão x.
-<p><strong>2°</strong> Para sortear os números do bingo, clique no botão y.</p>
-<p><strong>3°</strong> Após o último o número ser sorteado, uma mensagem de "fim" ficará a ser mostrada até que o botão x seja
-pressionado por 5 segundos, então a partida será reiniciada.</p>
-<strong>Observação:</strong> Se durante o jogo, o botão x for clicado, então o display será desligado e o jogo salvo.
+<strong>1°</strong> Para ligar/desligar o circuito clique no botão "iniciar/desligar/resetar".<br>
+<strong>2°</strong> Para sortear os números do bingo, clique no botão "sorteia".<br>
+<strong>3°</strong> Após o último o número ser sorteado, uma mensagem de "fim" será mostrada 3 vezes,
+então o jogo volta ao seu estado inicial esperando o início de uma nova partida.<p></p>
+<p><strong>Observações:</strong><br>
+<strong>1°</strong> Se durante o jogo, o botão x for pressionado por 4 segundos, o circuito
+será resetado e voltará ao seu estado inicial, mostrando "--".<br>
+<strong>2°</strong> Se durante uma partida, o usuário clicar no botão x, o circuito será desligado, mas antes salvará
+os dados da partida vigente. Desta forma, quando o botão for clicado novamente, o jogo pode continuar
+de onde parou.
+</p>
+<p>
+<strong>Atribuição pelo uso dos ícones</strong><br>
+<a href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Pixel perfect - Flaticon</a><br>
+<a href="https://www.flaticon.com/free-icons/home-button" title="home button icons">Home button icons created by hqrloveq - Flaticon</a>
+</p>
 
 <p>
-    <a href="docs/LOGICA.md">
+    <br><a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/LOGICA_E_FUNCIONAMENTO.md">
         <img src="assets/Seguir.jpeg" height="34" width="34"/>
     </a>
 </p>
