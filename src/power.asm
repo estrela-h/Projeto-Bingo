@@ -32,11 +32,11 @@ power_loop_int:
     ; ====================================================================
 espera_soltar_reset:
     in      TEMP, PINC
-    sbrs    TEMP, 1                  ; Espera você TIRAR O DEDO do botão (ir para 1)
+    sbrs    TEMP, 1                  ; Espera você soltar o botão (ir para 1)
     rjmp    espera_soltar_reset      ; Se continuar 0, fica preso aqui!
 
     rcall   delay_visual             ; Filtro anti-ruído da soltura
-    jmp     main                     ; AGORA SIM: Dedo fora do botão, reinicia em segurança!
+    jmp     main                     ; Reinicia o sorteio
 
     ; ====================================================================
     ; ROTINA DE SONO PROFUNDO (Desligamento)
@@ -67,7 +67,7 @@ dorme_loop:
     ; --- ACORDANDO ---
     rcall   delay_visual             
     in      TEMP, PINC               ; Lê o estado do botão
-    sbrc    TEMP, 1                  ; O botão ainda está apertado (0)?
+    sbrc    TEMP, 1                  ; Verifica se o botão ainda está apertado
     rjmp    dorme_loop               ; Falso alarme, volta a dormir
 
 espera_soltar_ligar:
@@ -77,9 +77,6 @@ espera_soltar_ligar:
 
     rcall   delay_visual             
 
-    ; BUG FIX 3: Após acordar definitivamente, limpa SM1 e SE do SMCR.
-    ; Sem isso, qualquer instrução "sleep" executada fora de contexto poderia
-    ; colocar o chip em modo de sono novamente sem intenção.
     clr     TEMP
     out     SMCR, TEMP               ; Zera SM1 e SE — sono desabilitado até próximo ciclo explícito
     
