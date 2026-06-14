@@ -11,9 +11,9 @@ desliga_sistema:
     ; TRATAMENTO INDEPENDENTE: Quick Press (Desliga) vs Long Press (Reset)
     ; Em vez de apagar a tela de cara, vamos medir o tempo do clique primeiro!
     ; ====================================================================
-    ldi     r26, 20          
+    ldi     r26, 20
 power_loop_ext:
-    ldi     r27, 100
+    ldi     r27, 100         ; Espera confirmação de reset
 power_loop_int:
     rcall   delay_1ms
     in      TEMP, PINC       ; Lê o estado do botão
@@ -52,13 +52,14 @@ apenas_desliga:
     rcall   delay_longo              ; Atraso para evitar interferência de ruído da soltura
 
     ; 2. Limpa interrupções pendentes
-    ldi     TEMP, (1<<PCIF1)
-    out     PCIFR, TEMP              
+    ldi     TEMP, (1<<PCIF1)         ; Marca no bit PCIF1 que uma interrupção foi requisitada
+    out     PCIFR, TEMP              ; Escreve no registrador e esta ação vai limpar a FLAG,
+    ; quando a rotina de interrupção for executada
 
     ; 3. Configura o modo de sono e dorme
-    ldi     TEMP, (1<<SM1) | (1<<SE) 
-    out     SMCR, TEMP
-    sei                              
+    ldi     TEMP, (1<<SM1) | (1<<SE)  ; Define o modo ADC Noise Reduction Mode
+    out     SMCR, TEMP                ; Este para a CPU, mas permite interrupções externas
+    sei                               ; Interrupção global disponível
 
 dorme_loop:
     sleep                            
@@ -88,5 +89,5 @@ espera_soltar_ligar:
     ldi     TEMP, (1<<CS01) | (1<<CS00)
     out     TCCR0B, TEMP             
     
-    cbr     FLAGS, (1<<0)            
-    rjmp    loop_principal
+    cbr     FLAGS, (1<<0)            ; Limpa o bit 0 da FLAGS
+    rjmp    loop_principal           ; Volta para o loop da main
