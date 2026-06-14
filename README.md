@@ -37,7 +37,7 @@ de onde parou.<br>
 </p>
 
 <p>
-    <a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/LOGICA.md">
+    <br><a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/LOGICA_E_FUNCIONAMENTO.md">
         <img src="assets/Seguir.jpeg" height="34" width="34"/>
     </a>
 </p>
