@@ -125,8 +125,8 @@ configurações iniciais.
 <p>
 <b>4. Rotinas de Delay</b><br>
     A rotina de delays contempla tanto delays para lidar com o ruído, tanto quanto para controlar o ritmo das exibições no
-display. A construção de todas as sub-rotinas de delays dodelays.asm foram feitas utilizando de loops que apenas fazem 
-decrementações, ou seja, apenas queima alguns clocks. Entretanto, há algumas sub-rotinas que realmente utilizam do relógio
+display. A construção de todas as sub-rotinas de delays do delays.asm foram feitas utilizando loops que apenas fazem 
+decrementações, ou seja, apenas queimam alguns clocks. Entretanto, há algumas sub-rotinas que realmente utilizam do relógio
 -interno do microcontrolador, elas estão presentes em hardware.asm, mas essas sub-rotinas não são para o uso de delays 
 gerais, elas estão relacionadas a multiplexação e interrupção.
 </p>
@@ -139,7 +139,7 @@ números de saída. Assim, o código escreve as dezenas apaga e escreve as unida
 </p>
 
 <p>
-    <a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/MATERIAIS.md">
+    <a href="https://github.com/estrela-h/Projeto-Bingo/blob/main/docs/MATERIAIS.md">
         <img src="/assets/Seguir.jpeg" height="34" width="34"/>
     </a>
 </p>

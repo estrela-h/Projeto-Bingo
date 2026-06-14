@@ -1,5 +1,5 @@
 <h1>Bingo Eletrônico</h1>
-<img src=https://img.shields.io/badge/STATUS-EM_DESENVOLVIMENTO-lightgreen  alt=""/>
+<img src=https://img.shields.io/badge/STATUS-CONCLUÍDO-lightgreen  alt=""/>
 
 <h2>Descrição do Projeto</h2>
 <div>
@@ -34,10 +34,11 @@ de onde parou.
 <strong>Atribuição pelo uso dos ícones</strong><br>
 <a href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Pixel perfect - Flaticon</a><br>
 <a href="https://www.flaticon.com/free-icons/home-button" title="home button icons">Home button icons created by hqrloveq - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/bingo" title="bingo icons">Bingo icons created by Freepik - Flaticon</a>
 </p>
 
 <p>
-    <br><a href="https://github.com/estrela-h/Projeto-Bingo/blob/documentacao/docs/LOGICA_E_FUNCIONAMENTO.md">
+    <br><a href="https://github.com/estrela-h/Projeto-Bingo/blob/main/docs/LOGICA_E_FUNCIONAMENTO.md">
         <img src="assets/Seguir.jpeg" height="34" width="34"/>
     </a>
 </p>

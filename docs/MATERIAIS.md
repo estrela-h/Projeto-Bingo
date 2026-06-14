@@ -28,7 +28,7 @@ Modelo do circuito físico.</p>
 >> Jumpers<br>
 
 <p>
-    <a href="https://github.com/estrela-h/Projeto-Bingo/tree/documentacao">
+    <a href="https://github.com/estrela-h/Projeto-Bingo/tree/main">
         <img src="/assets/home-button.png" height="34" width="34"/>
     </a>
 </p>
