@@ -1,6 +1,6 @@
 ;==============================================================================
 ; MÓDULO: sorteio.asm
-; Responsabilidade: Gerar números "aleatórios", garantir que não passem de 75,
+; Responsabilidade: Gerar números "aleatórios", garantir que não passem de BINGO_MAX,
 ;                   e checar se o número já saiu antes no bingo.
 ;==============================================================================
 
@@ -14,7 +14,7 @@ busca_numero:
     rcall   modBINGO_MAX            ; O número gerado pode ir até 255. Aqui cortamos ele para
     ;sobrar apenas o resto da divisão por BINGO_MAX  (ficando de 0 a BINGO_MAX  -1).
     inc     TEMP            ; Soma +1. Assim, o nosso número sorteado agora será
-    ;obrigatoriamente de 1 a 75
+    ;obrigatoriamente de 1 a o valor BINGO_MAX
 
     ;            --- VERIFICA SE O NÚMERO JÁ SAIU ---
     ; Vamos usar o número sorteado como um "índice" na lista
@@ -45,7 +45,7 @@ busca_numero:
 ; ====================================================================
 ; RESTO DA DIVISÃO (Módulo)
 ; Como o microcontrolador não sabe dividir nativamente, fazemos isso 
-; subtraindo 75 várias vezes seguidas até não dar mais.
+; subtraindo o valor de BINGO_MAX várias vezes seguidas até não dar mais.
 ; ====================================================================
 modBINGO_MAX:
     cpi     TEMP, BINGO_MAX       ; O número atual é menor que BINGO_MAX ?

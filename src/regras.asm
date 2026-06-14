@@ -5,7 +5,7 @@
 ;==============================================================================
 
 ;==============================================================================
-; --- FIM DE JOGO (Todos os 75 números saíram) ---
+; --- FIM DE JOGO (Todos os números saíram) ---
 ;==============================================================================
 handler_bingo_completo:
     ldi TEMP,0
@@ -37,15 +37,15 @@ realizar_sorteio:
     cbr     FLAGS, (1<<2)            ; Limpa a flag de configuração inicial (o jogo já começou)
     sbi     PORTB, 3                 ; Liga um LED no pino 3 ao clicar no botão
 
-    cpi     COUNT, BINGO_MAX         ; Compara: O total de sorteados já atingiu 75?
+    cpi     COUNT, BINGO_MAX         ; Compara: O total de sorteados já atingiu o valor BINGO_MAX?
     brsh    sorteio_esgotado         ; Se sim (maior ou igual), pula lá pro final (sorteio esgotado)
 
     rcall   busca_numero             ; Vai em outro arquivo buscar um número aleatório diferente
     rcall   atualiza_display         ; Pega esse número e desenha nos displays
 
-    cpi     COUNT, BINGO_MAX +1      ; Compara de novo: Chegou em 75 números com esse último sorteio?
-    brlo    sorteio_ok               ; Se for menor que 75, tudo ok, pula pro final da rotina
-    sbr     FLAGS, (1<<1)            ; Se chegou em 75, anota na FLAGS (Bit 1) que o bingo está completo.
+    cpi     COUNT, BINGO_MAX +1      ; Compara de novo: Chegou em no valor de BINGO_MAX números com esse último sorteio?
+    brlo    sorteio_ok               ; Se for menor que o valor de BINGO_MAX, tudo ok, pula pro final da rotina
+    sbr     FLAGS, (1<<1)            ; Se chegou no valor BINGO_MAX, anota na FLAGS (Bit 1) que o bingo está completo.
 
 sorteio_ok:
     rcall   delay_visual             ; Dá um tempo só para o LED do sorteio aparecer
