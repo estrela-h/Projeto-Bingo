@@ -10,7 +10,10 @@ Imagem do circuito digital no SimulIDE.
 <div>
 <img height="180" src="/assets/Circuito_físico1.jpeg" width="360" alt=""/><br>
 Imagem 1 do circuito físico.
+<p><img height="180" src="/assets/Circuito_fisico2.jpeg" width="360" alt=""/><br>
+Modelo do circuito físico.</p>
 </div>
+
 
 <h3>Materiais Utilizados</h3>
 <div>
