@@ -16,15 +16,15 @@ power_loop_ext:
     ldi     r27, 100
 power_loop_int:
     rcall   delay_1ms
-    in      TEMP, PINC
+    in      TEMP, PINC       ; Lê o estado do botão
     
     ; Se o botão SOLTAR ANTES de dar o tempo (clique rápido):
     sbrc    TEMP, 1          
     rjmp    apenas_desliga   ; Vai para a rotina que realmente apaga a tela e dorme
     
-    dec     r27
-    brne    power_loop_int
-    dec     r26
+    dec     r27              ; Se não, pode ser que o usuário esteja tentando
+    brne    power_loop_int   ; resetar o circuito, então devemos esperar para
+    dec     r26              ; confirmar.
     brne    power_loop_ext
 
     ; ====================================================================
@@ -65,12 +65,12 @@ dorme_loop:
     
     ; --- ACORDANDO ---
     rcall   delay_visual             
-    in      TEMP, PINC        
+    in      TEMP, PINC               ; Lê o estado do botão
     sbrc    TEMP, 1                  ; O botão ainda está apertado (0)?
-    rjmp    dorme_loop               ; Falso alarme, volta a dormir!
+    rjmp    dorme_loop               ; Falso alarme, volta a dormir
 
 espera_soltar_ligar:
-    in      TEMP, PINC
+    in      TEMP, PINC               ; Lê o estado do botão
     sbrs    TEMP, 1                  ; Espera soltar
     rjmp    espera_soltar_ligar      
 
